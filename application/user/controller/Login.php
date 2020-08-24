@@ -1,7 +1,7 @@
 <?php
 
 
-namespace app\user;
+namespace app\user\controller;
 
 
 use think\Controller;
@@ -14,7 +14,7 @@ class Login extends Controller
         $password = input('post.password'); // 获取密码
         // 获取用户信息
         $baseInfo = model('common/User')->findUserInfoByUserNameAndPwd($username, $password);
-        
+
         return json($baseInfo);
     }
 }
