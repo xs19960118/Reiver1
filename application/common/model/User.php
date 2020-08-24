@@ -1,12 +1,15 @@
 <?php
 
 
-namespace app\common;
+namespace app\common\model;
 
-use think\Controller;
+use think\Model;
 
-class User extends Controller
+class User extends Model
 {
-    //
+    // 设置当前模型对应的完整数据表名称
+    protected $table = 'user';
 
+    // 设置主键
+    protected $pk = 'IDX';
 }
