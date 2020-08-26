@@ -15,6 +15,8 @@ class TokenVerify extends Controller
     {
         $key = '214'; // key
         $time = time(); // 当前时间
+        $uid = md5($info['id'] . $info['username'] . $time); // 生成uid
+
         // token
         $token = [
             'iss' => 'http://rangeloney.com', // 签发者 可选
@@ -26,12 +28,25 @@ class TokenVerify extends Controller
             'nbf' => $time, // 某个时间点后才能访问，比如设置time+30，表示当前时间30秒后才能使用
             'exp' => $time + 3600 * 2, // 过期时间,这里设置2个小时
             'data' => [ // 自定义信息，不要定义敏感信息
-                'uid' => $info['uid'],
-                'username' => $info['id']
+                'uid' => $uid,
+                'username' => $info['username']
             ]
         ];
+        // 将这个token存到 redis中
 
-        // 输出 token 看一下
-        echo JWT::encode($token, $key);
+
+        // 返回 token
+        return JWT::encode($token, $key);
     }
+
+    // token及uid验证
+    public function verifyToken($token)
+    {
+        // 判断是否存在
+
+        // 若存在判断token是否过期
+
+
+    }
+
 }

@@ -16,7 +16,15 @@ class User extends Model
     // 设置主键
     protected $pk = 'IDX';
 
-    // 根据用户名和密码查询单个用户信息
+    /**
+     * 根据用户名和密码查询单个用户信息
+     * @param $username
+     * 用户名
+     * @param $password
+     * 密码
+     * @return array|false|string
+     * 查询成功返回处理后的数组数据，失败返回false
+     */
     public function findUserInfoByUserNameAndPwd($username, $password)
     {
         try {
@@ -32,7 +40,16 @@ class User extends Model
             return '数据库连接异常' . $e;
         }
 
-        return json($user);
+        // 处理一下数据返回给调用它的控制器
+        return ($user->isEmpty()) ? false :
+            [
+                'username' => $user['USERNAME'],
+                'password' => $user['PASSWORD'],
+                'identity' => $user['IDENTITY'],
+                'power' => $user['JURISDICTION'],
+                'latestLoginTime' => $user['LATEST_LOGIN_TIME'],
+                'id' => $user['IDX']
+            ];
     }
 
 }
