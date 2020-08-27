@@ -48,17 +48,14 @@ class TokenVerify extends Controller
             ]
         ];
 
-        // 将这个 token 存到 redis中
-        $token = JWT::encode($payload, $secret, 'HS256');
-        $key = self::$redisPrefix . '_' . $uid;
-        Cache::store('redis')->set($key, $token, self::$redisExpire);
+        // 将这个 token 存到 redis中,设置键为：前缀 + 用户名，设置值为 uid
+        $key = self::$redisPrefix . '_' . $info['username'];
+        Cache::store('redis')->set($key, $uid, self::$redisExpire);
 
-        // 返回 token
+        // 返回 token (将其他信息都存在了token中，我并不需要额外设置)
+        $token = JWT::encode($payload, $secret, 'HS256');
         return [
             'token' => $token, // token
-            'uid' => $uid, // uid
-            'identity' => $info['identity'], // 用户身份
-            'power' => $info['power'] // 权限数字
         ];
     }
 
@@ -66,21 +63,18 @@ class TokenVerify extends Controller
      * token验证
      * @param $token
      * 客户端传入的 token
-     * @param $uid
-     * 客户端传入的 uid
      * @return bool
      * 返回 true 验证通过，返回 false 验证位通过
      */
-    public function checkToken($token, $uid)
+    public function checkToken($token)
     {
-        $key = self::$redisPrefix . '_' . $uid; // 通过 uid 来拼接 key
         try {
+            $key = self::$redisPrefix . '_' . $uid; // 通过 uid 来拼接 key
             $clientToken = JWT::decode($token, self::$secret, ['HS256']); // 解码来自客户端的 token
             halt($clientToken);
         } catch (Exception $e) {
             return false;
         }
-
 
 
         if (!$token === $redis_token) {

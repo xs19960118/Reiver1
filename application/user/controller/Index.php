@@ -15,8 +15,6 @@ class Index extends Controller
      */
     public function Login()
     {
-        halt('in Login');
-
         $username = input('username'); // 获取用户名
         $password = input('password'); // 获取密码
 
@@ -34,4 +32,15 @@ class Index extends Controller
         // 签发token给客户端
         return json((new TokenVerify)->creatToken($info));
     }
+
+    // 用户注册
+    public function Register()
+    {
+
+        return '进行用户注册';
+        // 用户名
+        // 手机号
+        // 密码
+    }
+
 }
