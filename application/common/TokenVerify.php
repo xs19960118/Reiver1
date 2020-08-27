@@ -5,20 +5,28 @@ namespace app\common;
 
 use think\Controller;
 use \Firebase\JWT\JWT;
+use think\facade\Cache;
 
 //导入JWT
 
 class TokenVerify extends Controller
 {
+
+    // redis 键前缀
+    private static $redisPrefix = 'xs';
+
+    // redis 过期时间
+    private static $redisExpire = 7200;
+
     // 用于生成一个 token
     public function creatToken($info)
     {
-        $key = '214'; // key
+        $secret = '214'; // key
         $time = time(); // 当前时间
         $uid = md5($info['id'] . $info['username'] . $time); // 生成uid
 
-        // token
-        $token = [
+        // payload
+        $payload = [
             'iss' => 'http://rangeloney.com', // 签发者 可选
             'aud' => [ // 接收该JWT的一方，可选
                 'identity' => $info['identity'], // 用户身份
@@ -33,10 +41,11 @@ class TokenVerify extends Controller
             ]
         ];
         // 将这个token存到 redis中
-
+        $key = self::$redisPrefix . '_' . $uid;
+        Cache::store('redis')->set('', 'value', 3600);
 
         // 返回 token
-        return JWT::encode($token, $key);
+        $token = JWT::encode($payload, $secret, 'HS256');
     }
 
     // token及uid验证
