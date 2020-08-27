@@ -7,12 +7,19 @@ namespace app\user\controller;
 use app\common\TokenVerify;
 use think\Controller;
 
-class Login extends Controller
+class Index extends Controller
 {
-    public function Login ()
+    /**
+     * 用户登录：用户名密码正确后签发 token 给客户端端
+     * @return string|
+     */
+    public function Login()
     {
+        halt('in Login');
+
         $username = input('username'); // 获取用户名
         $password = input('password'); // 获取密码
+
         // 获取用户信息
         $info = model('common/User')->findUserInfoByUserNameAndPwd($username, $password);
 
@@ -25,8 +32,6 @@ class Login extends Controller
         }
 
         // 签发token给客户端
-        $var = (new TokenVerify)->creatToken($info);
-        halt($var);
-
+        return json((new TokenVerify)->creatToken($info));
     }
 }

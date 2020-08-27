@@ -3,30 +3,37 @@
 
 namespace app\common;
 
+use Exception;
 use think\Controller;
 use \Firebase\JWT\JWT;
 use think\facade\Cache;
 
-//导入JWT
 
 class TokenVerify extends Controller
 {
 
     // redis 键前缀
-    private static $redisPrefix = 'xs';
+    private static string $redisPrefix = 'xs';
 
     // redis 过期时间
-    private static $redisExpire = 7200;
+    private static int $redisExpire = 7200;
 
-    // 用于生成一个 token
+    // secret
+    private static string $secret = '214';
+
+    /**
+     * 于生成一个 token
+     * @param $info
+     * 需要用户的部分信息
+     * @return array
+     * 返回一个数组，包含：token、uid、身份、权限
+     */
     public function creatToken($info)
     {
-        $secret = '214'; // key
+        $secret = self::$secret; // secret
         $time = time(); // 当前时间
         $uid = md5($info['id'] . $info['username'] . $time); // 生成uid
-
-        // payload
-        $payload = [
+        $payload = [ // payload
             'iss' => 'http://rangeloney.com', // 签发者 可选
             'aud' => [ // 接收该JWT的一方，可选
                 'identity' => $info['identity'], // 用户身份
@@ -40,22 +47,50 @@ class TokenVerify extends Controller
                 'username' => $info['username']
             ]
         ];
-        // 将这个token存到 redis中
+
+        // 将这个 token 存到 redis中
+        $token = JWT::encode($payload, $secret, 'HS256');
         $key = self::$redisPrefix . '_' . $uid;
-        Cache::store('redis')->set('', 'value', 3600);
+        Cache::store('redis')->set($key, $token, self::$redisExpire);
 
         // 返回 token
-        $token = JWT::encode($payload, $secret, 'HS256');
+        return [
+            'token' => $token, // token
+            'uid' => $uid, // uid
+            'identity' => $info['identity'], // 用户身份
+            'power' => $info['power'] // 权限数字
+        ];
     }
 
-    // token及uid验证
-    public function verifyToken($token)
+    /**
+     * token验证
+     * @param $token
+     * 客户端传入的 token
+     * @param $uid
+     * 客户端传入的 uid
+     * @return bool
+     * 返回 true 验证通过，返回 false 验证位通过
+     */
+    public function checkToken($token, $uid)
     {
-        // 判断是否存在
+        $key = self::$redisPrefix . '_' . $uid; // 通过 uid 来拼接 key
+        try {
+            $clientToken = JWT::decode($token, self::$secret, ['HS256']); // 解码来自客户端的 token
+            halt($clientToken);
+        } catch (Exception $e) {
+            return false;
+        }
 
-        // 若存在判断token是否过期
 
 
+        if (!$token === $redis_token) {
+            return false;
+        }
+
+        // 从新设置这个 token 的过期时间
+        Cache::store('redis')->set($key, $token, self::$redisExpire);
+
+        return true;
     }
 
 }
