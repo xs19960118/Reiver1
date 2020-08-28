@@ -11,10 +11,10 @@ use think\Model;
 class User extends Model
 {
     // 设置当前模型对应的完整数据表名称
-    protected $table = 'user';
+    protected string $table = 'user';
 
     // 设置主键
-    protected $pk = 'IDX';
+    protected string $pk = 'IDX';
 
     /**
      * 根据用户名和密码查询单个用户信息

@@ -42,7 +42,7 @@ class TokenVerify extends Controller
             'iat' => $time, // 签发时间
             'nbf' => $time, // 某个时间点后才能访问，比如设置time+30，表示当前时间30秒后才能使用
             'exp' => $time + 3600 * 2, // 过期时间,这里设置2个小时
-            'data' => [ // 自定义信息，不要定义敏感信息
+            'data' => [ // 自定义信息
                 'uid' => $uid,
                 'username' => $info['username']
             ]
@@ -69,22 +69,38 @@ class TokenVerify extends Controller
     public function checkToken($token)
     {
         try {
-            $key = self::$redisPrefix . '_' . $uid; // 通过 uid 来拼接 key
             $clientToken = JWT::decode($token, self::$secret, ['HS256']); // 解码来自客户端的 token
-            halt($clientToken);
+            $tokenArr = self::object_array($clientToken); // stdClass 转 array
+            list($username, $uid) = [$tokenArr['data']['username'], $tokenArr['data']['uid']];
+            $redis = Cache::store('redis')->handler();
+            $key = self::$redisPrefix . '_' . $username;
+
+            // 如果这个键不存在则验证失败
+            if (!$redis->exists($key)) {
+                return false;
+            }
+
+            // 从新设置这个 token 的过期时间，达到延长的效果
+            Cache::store('redis')->set($key, $uid, self::$redisExpire);
         } catch (Exception $e) {
             return false;
         }
 
-
-        if (!$token === $redis_token) {
-            return false;
-        }
-
-        // 从新设置这个 token 的过期时间
-        Cache::store('redis')->set($key, $token, self::$redisExpire);
-
         return true;
+    }
+
+    // PHP stdClass Object转 array
+    private static function object_array($array)
+    {
+        if (is_object($array)) {
+            $array = (array)$array;
+        }
+        if (is_array($array)) {
+            foreach ($array as $key => $value) {
+                $array[$key] = self::object_array($value);
+            }
+        }
+        return $array;
     }
 
 }

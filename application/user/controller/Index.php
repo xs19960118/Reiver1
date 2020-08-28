@@ -24,8 +24,8 @@ class Index extends Controller
         // 未查到相关信息
         if (!$info) {
             return json([
-                'msg' => '密码或用户名输入错误',
-                'status' => 'fail'
+                'status' => '102',
+                'msg' => '密码或用户名输入错误'
             ]);
         }
 
